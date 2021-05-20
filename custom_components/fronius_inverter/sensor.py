@@ -34,6 +34,7 @@ CONF_SCOPE = 'scope'
 CONF_UNITS = 'units'
 CONF_POWER_UNITS = 'power_units'
 CONF_POWERFLOW = 'powerflow'
+CONF_BATTERYPOWERFLOW = 'batterypowerflow'
 CONF_SMARTMETER = 'smartmeter'
 CONF_SMARTMETER_DEVICE_ID = 'smartmeter_device_id'
 
@@ -45,28 +46,13 @@ POWER_UNIT_TYPES = ['W', 'kW', 'MW']
 
 # Key: ['device', 'system', 'json_key', 'name', 'unit', 'convert_units', 'icon']
 SENSOR_TYPES = {
-    'year_energy': ['inverter', True, 'YEAR_ENERGY', 'Year Energy', 'MWh', 'energy', 'mdi:solar-power'],
-    'total_energy': ['inverter', True, 'TOTAL_ENERGY', 'Total Energy', 'MWh', 'energy', 'mdi:solar-power'],
-    'ac_power': ['inverter', True, 'PAC', 'AC Power', 'W', 'power', 'mdi:solar-power'],
-    'day_energy': ['inverter', True, 'DAY_ENERGY', 'Day Energy', 'kWh', False, 'mdi:solar-power'],
-    'ac_current': ['inverter', False, 'IAC', 'AC Current', 'A', False, 'mdi:solar-power'],
-    'ac_voltage': ['inverter', False, 'UAC', 'AC Voltage', 'V', False, 'mdi:solar-power'],
-    'ac_frequency': ['inverter', False, 'FAC', 'AC Frequency', 'Hz', False, 'mdi:solar-power'],
-    'dc_current': ['inverter', False, 'IDC', 'DC Current', 'A', False, 'mdi:solar-power'],
-    'dc_voltage': ['inverter', False, 'UDC', 'DC Voltage', 'V', False, 'mdi:solar-power'],
-    'grid_usage': ['powerflow', False, 'P_Grid', 'Grid Usage', 'W', 'power', 'mdi:solar-power'],
-    'house_load': ['powerflow', False, 'P_Load', 'House Load', 'W', 'power', 'mdi:solar-power'],
-    'panel_status': ['powerflow', False, 'P_PV', 'Panel Status', 'W', 'power', 'mdi:solar-panel'],
-    'rel_autonomy': ['powerflow', False, 'rel_Autonomy', 'Relative Autonomy', '%', False, 'mdi:solar-panel'],
-    'rel_selfconsumption': ['powerflow', False, 'rel_SelfConsumption', ' Relative Self Consumption', '%', False, 'mdi:solar-panel'],
-    'smartmeter_current_ac_phase_one': ['smartmeter', False, 'Current_AC_Phase_1', 'SmartMeter Current AC Phase 1', 'A', False, 'mdi:solar-power'],
-    'smartmeter_current_ac_phase_two': ['smartmeter', False, 'Current_AC_Phase_2', 'SmartMeter Current AC Phase 2', 'A', False, 'mdi:solar-power'],
-    'smartmeter_current_ac_phase_three': ['smartmeter', False, 'Current_AC_Phase_3', 'SmartMeter Current AC Phase 3', 'A', False, 'mdi:solar-power'],
-    'smartmeter_voltage_ac_phase_one': ['smartmeter', False, 'Voltage_AC_Phase_1', 'SmartMeter Voltage AC Phase 1', 'V', False, 'mdi:solar-power'],
-    'smartmeter_voltage_ac_phase_two': ['smartmeter', False, 'Voltage_AC_Phase_2', 'SmartMeter Voltage AC Phase 2', 'V', False, 'mdi:solar-power'],
-    'smartmeter_voltage_ac_phase_three': ['smartmeter', False, 'Voltage_AC_Phase_3', 'SmartMeter Voltage AC Phase 3', 'V', False, 'mdi:solar-power'],
-    'smartmeter_energy_ac_consumed': ['smartmeter', False, 'EnergyReal_WAC_Sum_Consumed', 'SmartMeter Energy AC Consumed', 'Wh', 'energy', 'mdi:solar-power'],
-    'smartmeter_energy_ac_sold': ['smartmeter', False, 'EnergyReal_WAC_Sum_Produced', 'SmartMeter Energy AC Sold', 'Wh', 'energy', 'mdi:solar-power']
+    'akkuleistung': ['powerflow', False, 'P_Akku', 'Akkuleistung', 'W', 'power', 'mdi:car-battery'],
+    'netzleistung': ['powerflow', False, 'P_Grid', 'Netzleistung', 'W', 'power', 'mdi:transmission-tower'],
+    'hausverbrauch': ['powerflow', False, 'P_Load', 'Hausverbrauch', 'W', 'power', 'mdi:home'],
+    'solarleistung': ['powerflow', False, 'P_PV', 'Produzierte Leistung', 'W', 'power', 'mdi:weather-sunny'],
+    'akkustand': ['batterypowerflow', False, 'SOC', 'Akku-Ladezustand', '%', 'False', 'mdi:car-battery'],
+    'netzbezug': ['smartmeter', False, 'SMARTMETER_ENERGYACTIVE_CONSUMED_SUM_F64', 'Bezogene Energie', 'Wh', 'energy', 'mdi:transmission-tower'],
+    'netzeinspeisung': ['smartmeter', False, 'SMARTMETER_ENERGYACTIVE_PRODUCED_SUM_F64', 'Eingespeiste Energie', 'Wh', 'energy', 'mdi:transmission-tower']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -80,6 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_POWER_UNITS, default='W'):
         vol.In(POWER_UNIT_TYPES),
     vol.Optional(CONF_POWERFLOW, default=False): cv.boolean,
+    vol.Optional(CONF_BATTERYPOWERFLOW, default=False): cv.boolean,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_SMARTMETER, default=False): cv.boolean,
@@ -97,6 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     power_units = config.get(CONF_POWER_UNITS)
     name = config.get(CONF_NAME)
     powerflow = config.get(CONF_POWERFLOW)
+    batterypowerflow = config.get(CONF_BATTERYPOWERFLOW)
     smartmeter = config.get(CONF_SMARTMETER)
     smartmeter_device_id = config.get(CONF_SMARTMETER_DEVICE_ID)
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -107,6 +95,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if powerflow:
         powerflow_data = PowerflowData(session, ip_address, None, None)
         fetchers.append(powerflow_data)
+    if batterypowerflow:
+        batterypowerflow_data = batteryPowerflowData(session, ip_address, None, None)
+        fetchers.append(batterypowerflow_data)
     if smartmeter:
         smartmeter_data = SmartMeterData(session, ip_address, smartmeter_device_id, "Device")
         fetchers.append(smartmeter_data)
@@ -138,23 +129,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         state = hass.states.get(sensor)
     
         if device == "inverter":
-            _LOGGER.debug("Adding inverter sensor: {}, {}, {}, {}, {}, {}, {}, {}".format(inverter_data, name, variable, scope, sensor_units, device_id, powerflow, smartmeter))
-            dev.append(FroniusSensor(inverter_data, name, variable, scope, sensor_units, device_id, powerflow, smartmeter))
+            _LOGGER.debug("Adding inverter sensor: {}, {}, {}, {}, {}, {}, {}, {}".format(inverter_data, name, variable, scope, sensor_units, device_id, powerflow, batterypowerflow, smartmeter))
+            dev.append(FroniusSensor(inverter_data, name, variable, scope, sensor_units, device_id, powerflow, batterypowerflow, smartmeter))
             
         elif device == "powerflow" and powerflow:
-            _LOGGER.debug("Adding powerflow sensor: {}, {}, {}, {}, {}, {}, {}, {}".format(powerflow_data, name, variable, scope, sensor_units, device_id, powerflow, smartmeter))
-            dev.append(FroniusSensor(powerflow_data, name, variable, scope, sensor_units, device_id, powerflow, smartmeter))
+            _LOGGER.debug("Adding powerflow sensor: {}, {}, {}, {}, {}, {}, {}, {}".format(powerflow_data, name, variable, scope, sensor_units, device_id, powerflow, batterypowerflow, smartmeter))
+            dev.append(FroniusSensor(powerflow_data, name, variable, scope, sensor_units, device_id, powerflow, batterypowerflow, smartmeter))
+        
+        elif device == "batterypowerflow" and batterypowerflow:
+            _LOGGER.debug("Adding batterypowerflow sensor: {}, {}, {}, {}, {}, {}, {}, {}".format(batterypowerflow_data, name, variable, scope, sensor_units, device_id, powerflow, batterypowerflow, smartmeter))
+            dev.append(FroniusSensor(batterypowerflow_data, name, variable, scope, sensor_units, device_id, powerflow, batterypowerflow, smartmeter))
         
         elif device == "smartmeter" and smartmeter:
-            _LOGGER.debug("Adding meter sensor: {}, {}, {}, {}, {}, {}, {}, {}".format(smartmeter_data, name, variable, scope, sensor_units, device_id, powerflow, smartmeter))
-            dev.append(FroniusSensor(smartmeter_data, name, variable, scope, sensor_units, device_id, powerflow, smartmeter))
+            _LOGGER.debug("Adding meter sensor: {}, {}, {}, {}, {}, {}, {}, {}".format(smartmeter_data, name, variable, scope, sensor_units, device_id, powerflow, batterypowerflow, smartmeter))
+            dev.append(FroniusSensor(smartmeter_data, name, variable, scope, sensor_units, device_id, powerflow, batterypowerflow, smartmeter))
 
     async_add_entities(dev, True)
 
 class FroniusSensor(Entity):
     """Implementation of the Fronius inverter sensor."""
 
-    def __init__(self, device_data, name, sensor_type, scope, units, device_id, powerflow, smartmeter):
+    def __init__(self, device_data, name, sensor_type, scope, units, device_id, powerflow, batterypowerflow, smartmeter):
         """Initialize the sensor."""
         self._client = name
         self._device = SENSOR_TYPES[sensor_type][0]
@@ -170,6 +165,7 @@ class FroniusSensor(Entity):
         self._data = device_data
         self._icon = SENSOR_TYPES[sensor_type][6]
         self._powerflow = powerflow
+        self._batterypowerflow = batterypowerflow
         self._smartmeter = smartmeter
 
     @property
@@ -250,7 +246,7 @@ class FroniusSensor(Entity):
                             _LOGGER.debug(">>>>> Converting {} from null to 0".format(self._json_key))
                             value = 0
                         state = state + value
-            elif self._device == 'powerflow' or self._device == 'smartmeter':
+            elif self._device == 'powerflow' or self._device == 'batterypowerflow' or self._device == 'smartmeter':
                 # Read data directly, if it is 'null' convert it to 0
                 state = self._data.latest_data[self._json_key]
                 if state is None:
@@ -385,6 +381,20 @@ class PowerflowData(FroniusFetcher):
         """Get the latest data from inverter."""
         _LOGGER.debug("Requesting powerflow data")
         self._data = (await self.fetch_data(self._build_url()))['Body']['Data']['Site']
+
+class batteryPowerflowData(FroniusFetcher):
+    """Handle Fronius API object and limit updates."""
+
+    def _build_url(self):
+        """Build the URL for the requests."""
+        url = _POWERFLOW_URL.format(self._ip_address)
+        _LOGGER.debug("Fronius batteryPowerflow URL: %s", url)
+        return url
+
+    async def _update(self):
+        """Get the latest data from inverter."""
+        _LOGGER.debug("Requesting batterypowerflow data")
+        self._data = (await self.fetch_data(self._build_url()))['Body']['Data']['Inverters']['1']
 
 class SmartMeterData(FroniusFetcher):
     """Handle Fronius API object and limit updates."""
