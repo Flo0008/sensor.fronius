@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_SCAN_INTERVAL, ATTR_ATTRIBUTION, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET, STATE_UNAVAILABLE
+    CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_SCAN_INTERVAL, ATTR_ATTRIBUTION, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
     )
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity import Entity
@@ -21,8 +21,6 @@ from homeassistant.helpers.sun import get_astral_event_date
 _INVERTERRT = 'http://{}/solar_api/v1/GetInverterRealtimeData.cgi?Scope={}&DeviceId={}&DataCollection=CommonInverterData'
 _POWERFLOW_URL = 'http://{}/solar_api/v1/GetPowerFlowRealtimeData.fcgi'
 _METER_URL = 'http://{}/solar_api/v1/GetMeterRealtimeData.cgi?Scope={}&DeviceId={}'
-#_INVERTERRT = 'http://{}{}?DeviceId={}&DataCollection=CommonInverterData'
-#_POWERFLOW_URL = 'http://{}PowerFlow'
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Fronius Inverter Data"
@@ -187,12 +185,9 @@ class FroniusSensor(Entity):
         start_time = self.find_start_time(now)
         stop_time = self.find_stop_time(now)
 
-        if as_local(start_time) <= now <= as_local(stop_time):
-            _LOGGER.debug("Sensor is running. Start/Stop time: {}, {}".format(as_local(start_time), as_local(stop_time)))
-            return True
-        else:
-            _LOGGER.debug("Sensor is not running. Start/Stop time: {}, {}".format(as_local(start_time), as_local(stop_time)))
-            return False
+        _LOGGER.debug("!!! Start Time, Stop Time, Device: {}, {}, {}".format(as_local(start_time), as_local(stop_time), self._device))
+
+        return True
 
     @property
     def unique_id(self):
@@ -225,9 +220,6 @@ class FroniusSensor(Entity):
 
     async def async_update(self, utcnow=None):
         """Get the latest data from inverter and update the states."""
-        if not self.available:
-            self._state = STATE_UNAVAILABLE
-            return
 
         state = None
         if self._data.latest_data and (self._json_key in self._data.latest_data):
