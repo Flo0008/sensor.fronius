@@ -49,8 +49,8 @@ SENSOR_TYPES = {
     'hausverbrauch': ['powerflow', False, 'P_Load', 'Hausverbrauch', 'W', 'power', 'mdi:home'],
     'solarleistung': ['powerflow', False, 'P_PV', 'Produzierte Leistung', 'W', 'power', 'mdi:weather-sunny'],
     'akkustand': ['batterypowerflow', False, 'SOC', 'Akku-Ladezustand', '%', 'False', 'mdi:car-battery'],
-    'netzbezug': ['smartmeter', False, 'SMARTMETER_ENERGYACTIVE_CONSUMED_SUM_F64', 'Bezogene Energie', 'Wh', 'energy', 'mdi:transmission-tower'],
-    'netzeinspeisung': ['smartmeter', False, 'SMARTMETER_ENERGYACTIVE_PRODUCED_SUM_F64', 'Eingespeiste Energie', 'Wh', 'energy', 'mdi:transmission-tower']
+    'netzbezug': ['smartmeter', False, 'EnergyReal_WAC_Sum_Consumed', 'Bezogene Energie', 'Wh', 'energy', 'mdi:transmission-tower'],
+    'netzeinspeisung': ['smartmeter', False, 'EnergyReal_WAC_Sum_Produced', 'Eingespeiste Energie', 'Wh', 'energy', 'mdi:transmission-tower']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
